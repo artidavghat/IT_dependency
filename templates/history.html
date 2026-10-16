@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <title>
+   Monitoring History · IT Dependency Mapper
+  </title>
+  <link href="{{url_for('static',filename='style.css')}}" rel="stylesheet"/>
+ </head>
+ <body>
+  <main class="history">
+   <a href="/">
+    ← Back to Dashboard
+   </a>
+   <header class="top">
+    <div>
+     <small class="eyebrow">
+      MONITORING / HISTORY
+     </small>
+     <h1>
+      Monitoring History
+     </h1>
+     <p class="muted">
+      Latest 250 recorded TCP checks. Records are saved in the local SQLite database.
+     </p>
+    </div>
+    <form action="{{url_for('clear_history')}}" method="post" onsubmit="return confirm('Clear all monitoring history? This cannot be undone.');">
+     <button class="delete" type="submit" {% if not history %}disabled{% endif %}>
+      Clear History
+     </button>
+    </form>
+   </header>
+   {% with msgs=get_flashed_messages(with_categories=true) %}{% for cat,msg in msgs %}
+   <div class="flash {{cat}}">
+    {{msg}}
+   </div>
+   {% endfor %}{% endwith %}
+   <section class="panel tablewrap">
+    <table>
+     <thead>
+      <tr>
+       <th>
+        Checked At
+       </th>
+       <th>
+        Service
+       </th>
+       <th>
+        Endpoint
+       </th>
+       <th>
+        Status
+       </th>
+       <th>
+        Response
+       </th>
+       <th>
+        Details
+       </th>
+      </tr>
+     </thead>
+     <tbody>
+      {% for x in history %}
+      <tr>
+       <td>
+        {{x.checked_at}}
+       </td>
+       <td>
+        {{x.name}}
+       </td>
+       <td>
+        <code>
+         {{x.host}}:{{x.port}}
+        </code>
+       </td>
+       <td>
+        <span class="badge {{x.status|lower|replace(' ','-')}}">
+         {{x.status}}
+        </span>
+       </td>
+       <td>
+        {{x.response_ms}} ms
+       </td>
+       <td>
+        {{x.details}}
+       </td>
+      </tr>
+      {% else %}
+      <tr>
+       <td colspan="6">
+        No history yet. Return to the dashboard and click “Check All Services”.
+       </td>
+      </tr>
+      {% endfor %}
+     </tbody>
+    </table>
+   </section>
+   <footer>
+    IT Dependency Mapper ·
+    <a href="/">
+     Dashboard
+    </a>
+   </footer>
+  </main>
+ </body>
+</html>

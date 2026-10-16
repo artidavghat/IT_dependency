@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <title>
+   Edit Service · IT Dependency Mapper
+  </title>
+  <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet"/>
+ </head>
+ <body>
+  <main class="history">
+   <a href="/#services">
+    ← Back to Dashboard
+   </a>
+   <header class="top">
+    <div>
+     <small class="eyebrow">
+      SERVICES / EDIT
+     </small>
+     <h1>
+      Edit Service
+     </h1>
+     <p class="muted">
+      Update the endpoint and dependency details for this service.
+     </p>
+    </div>
+   </header>
+   {% with msgs=get_flashed_messages(with_categories=true) %}{% for cat,msg in msgs %}
+   <div class="flash {{cat}}">
+    {{msg}}
+   </div>
+   {% endfor %}{% endwith %}
+   <section class="panel editpanel">
+    <form action="{{ url_for('edit_service', sid=service.id) }}" class="formgrid" method="post">
+     <label>
+      Service name
+      <input maxlength="80" name="name" required="" value="{{service.name}}"/>
+     </label>
+     <label>
+      Type
+      <select name="service_type">
+       {% for typ in ['Application','Server','Database','Network','Other'] %}
+       <option value="{{typ}}" {% if service.service_type == typ %}selected{% endif %}>
+        {{typ}}
+       </option>
+       {% endfor %}
+      </select>
+     </label>
+     <label>
+      Host / IP
+      <input name="host" required="" value="{{service.host}}"/>
+     </label>
+     <label>
+      Port
+      <input max="65535" min="1" name="port" required="" type="number" value="{{service.port}}"/>
+     </label>
+     <label class="wide">
+      Depends on (optional)
+      <input name="depends_on" placeholder="Database" value="{{service.depends_on}}"/>
+     </label>
+     <div class="wide formactions">
+      <button class="primary" type="submit">
+       Save Changes
+      </button>
+      <a class="secondary" href="/#services">
+       Cancel
+      </a>
+     </div>
+    </form>
+   </section>
+  </main>
+ </body>
+</html>

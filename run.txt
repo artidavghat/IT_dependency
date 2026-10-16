@@ -1,0 +1,99 @@
+================================================================================
+IT DEPENDENCY MAPPER — RUNNING FRONTEND & BACKEND INSTRUCTIONS
+================================================================================
+
+1. PROJECT ARCHITECTURE OVERVIEW
+--------------------------------------------------------------------------------
+This is a full-stack Flask application where both Frontend and Backend are
+served seamlessly together:
+
+• BACKEND (Python / Flask):
+  - File: app.py
+  - Framework: Flask (Python 3.10+)
+  - Database: SQLite (default: it_mapper.db) / MySQL support
+  - Features:
+    * REST API endpoints:
+      - GET  /health          -> Service health check
+      - GET  /api/services    -> Returns all configured services
+      - POST /api/status      -> Runs live TCP checks on all services
+      - POST /api/status/<id> -> Runs live check on a single service
+    * Web routes:
+      - GET  /                -> Dashboard view
+      - POST /services/add    -> Add new service endpoint
+      - POST /services/edit/<id> -> Edit existing service
+      - POST /services/delete/<id> -> Delete service
+      - GET  /history         -> View check history table
+      - POST /history/clear   -> Clear all historical logs
+
+• FRONTEND (HTML5, Modern CSS, Vanilla JavaScript):
+  - Templates directory: templates/
+    * templates/index.html   -> Main interactive dashboard
+    * templates/edit.html    -> Service edit form
+    * templates/history.html -> Historical monitoring log
+  - Static directory: static/
+    * static/style.css       -> Design system, responsive layouts & themes
+    * static/script.js       -> Client-side interactivity:
+                               - "Check All Services" live AJAX polling
+                               - Real-time search and filter on service table
+                               - Interactive dependency map node selection
+                               - Dynamic alert banners & status badges
+
+--------------------------------------------------------------------------------
+2. PREREQUISITES & INSTALLATION
+--------------------------------------------------------------------------------
+Ensure Python 3.10+ (e.g., Python 3.14) is installed.
+
+Install the required Python packages:
+  C:\Python314\python.exe -m pip install -r requirements.txt
+
+Or in your active Python environment:
+  pip install -r requirements.txt
+
+Required packages:
+  - Flask>=3.0,<4.0
+  - python-dotenv>=1.0.0
+  - mysql-connector-python (optional for MySQL)
+
+--------------------------------------------------------------------------------
+3. ENVIRONMENT CONFIGURATION (.env)
+--------------------------------------------------------------------------------
+Configuration is stored in .env:
+
+  FLASK_APP=app.py
+  FLASK_ENV=development
+  FLASK_DEBUG=1
+  HOST=127.0.0.1
+  PORT=5000
+  SECRET_KEY=it-dependency-mapper-local-demo-secret-key-change-in-production
+  DATABASE_PATH=it_mapper.db
+  CHECK_TIMEOUT=1.5
+
+--------------------------------------------------------------------------------
+4. HOW TO RUN THE PROJECT
+--------------------------------------------------------------------------------
+Method 1 (One-Click Launcher on Windows):
+  Double-click `run.bat` or run in terminal:
+  .\run.bat
+
+Method 2 (Direct Python Command):
+  C:\Python314\python.exe app.py
+
+Method 3 (Standard Python / Activated Virtual Environment):
+  python app.py
+
+Once running, open your web browser at:
+  http://127.0.0.1:5000
+
+Health check endpoint:
+  http://127.0.0.1:5000/health
+
+--------------------------------------------------------------------------------
+5. FRONTEND USAGE GUIDE
+--------------------------------------------------------------------------------
+- Dashboard: View online/offline summary stats and dependency graph.
+- Check All Services: Click the top-right button to run TCP port tests on all endpoints.
+- Dependency Nodes: Click any node in the map to see host, port, and parent dependency.
+- Search Filter: Type in the search box above the table to instantly filter services.
+- Manage Services: Use "Add a service" form or the "Edit" / "Delete" buttons.
+- History Page: Click "History" in the sidebar to review all past TCP test records.
+================================================================================

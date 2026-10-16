@@ -1,0 +1,25 @@
+# Environment variables & secrets (CRITICAL: prevents database credentials leak)
+.env
+
+# SQLite Databases
+*.db
+*.sqlite3
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# OS and IDE files
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Local helper scripts
+powershell.cmd

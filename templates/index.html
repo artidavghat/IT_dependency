@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <title>
+   IT Dependency Mapper
+  </title>
+  <link href="{{ url_for('static',filename='style.css') }}" rel="stylesheet"/>
+  <script defer="" src="{{ url_for('static',filename='script.js') }}">
+  </script>
+ </head>
+ <body>
+  <div class="layout">
+   <aside class="sidebar">
+    <div class="brand">
+     <span>
+      ⌘
+     </span>
+     <div>
+      <b>
+       IT Mapper
+      </b>
+      <small>
+       Infrastructure Monitor
+      </small>
+     </div>
+    </div>
+    <p class="navlabel">
+     WORKSPACE
+    </p>
+    <a class="nav active" href="/">
+     ▦　Dashboard
+    </a>
+    <a class="nav" href="#services">
+     ▤　Services
+    </a>
+    <a class="nav" href="#dependencies">
+     ⌘　Dependencies
+    </a>
+    <a class="nav" href="#monitoring">
+     ◉　Port Monitor
+    </a>
+    <a class="nav" href="#alerts">
+     ♧　Alerts
+    </a>
+    <a class="nav" href="/history">
+     ◷　History
+    </a>
+    <div class="sidefoot">
+     <i>
+     </i>
+     <div>
+      <b>
+       Local demo environment
+      </b>
+      <small>
+       Monitoring workspace
+      </small>
+     </div>
+    </div>
+   </aside>
+   <main class="main">
+    <header class="top">
+     <div>
+      <small class="eyebrow">
+       OVERVIEW / INFRASTRUCTURE
+      </small>
+      <h1>
+       IT Dependency Mapper
+      </h1>
+      <p class="muted">
+       Monitor services, inspect dependencies, and troubleshoot issues.
+      </p>
+     </div>
+     <button class="primary" id="checkAllBtn">
+      ↻ Check All Services
+     </button>
+    </header>
+    {% with msgs=get_flashed_messages(with_categories=true) %}{% for cat,msg in msgs %}
+    <div class="flash {{cat}}">
+     {{msg}}
+    </div>
+    {% endfor %}{% endwith %}
+    <section class="stats">
+     <div class="stat">
+      <div>
+       Total Services
+       <span class="ico blue">
+        ▤
+       </span>
+      </div>
+      <strong id="totalServices">
+       {{total}}
+      </strong>
+      <small>
+       Configured services
+      </small>
+     </div>
+     <div class="stat">
+      <div>
+       Online
+       <span class="ico green">
+        ✓
+       </span>
+      </div>
+      <strong id="onlineServices">
+       {{online}}
+      </strong>
+      <small>
+       TCP checks succeeded
+      </small>
+     </div>
+     <div class="stat">
+      <div>
+       Offline
+       <span class="ico red">
+        !
+       </span>
+      </div>
+      <strong id="offlineServices">
+       {{offline}}
+      </strong>
+      <small>
+       Unable to connect
+      </small>
+     </div>
+     <div class="stat">
+      <div>
+       Checks Recorded
+       <span class="ico purple">
+        ◷
+       </span>
+      </div>
+      <strong id="historyCount">
+       {{history_count}}
+      </strong>
+      <small>
+       Saved in local history
+      </small>
+     </div>
+    </section>
+    <section class="panel" id="dependencies">
+     <div class="panelhead">
+      <div>
+       <h2>
+        Dependency Map
+       </h2>
+       <p class="muted">
+        Select a service node to view its relationship.
+       </p>
+      </div>
+      <span class="tag">
+       CHECKS ON DEMAND
+      </span>
+     </div>
+     <div class="flow">
+      {% for s in services %}
+      <button class="node" data-depends="{{s.depends_on}}" data-host="{{s.host}}" data-port="{{s.port}}" data-service="{{s.name}}" data-status="{{s.status}}" type="button">
+       <span class="nodeicon">
+        {% if s.service_type=='Database' %}▤{% elif s.service_type=='Network' %}⌁{% elif s.service_type=='Server' %}⚙{% else %}◈{% endif %}
+       </span>
+       <b>
+        {{s.name}}
+       </b>
+       <small>
+        {{s.service_type}}
+       </small>
+       <small class="node-dependency">
+        Depends on: {{s.depends_on or 'None'}}
+       </small>
+       <span class="badge {{s.status|lower|replace(' ','-')}}">
+        {{s.status}}
+       </span>
+      </button>
+      {% if not loop.last %}
+      <span class="arrow">
+       →
+      </span>
+      {% endif %}{% endfor %}
+     </div>
+     <div class="infostrip" id="dependencyInfo">
+      Click a service node to see its host, port, and configured dependency.
+     </div>
+    </section>
+    <section class="columns">
+     <section class="panel" id="services">
+      <div class="panelhead">
+       <div>
+        <h2>
+         Service Status
+        </h2>
+        <p class="muted">
+         Configured endpoints and latest check result.
+        </p>
+       </div>
+      </div>
+      <div class="search">
+       <span>
+        ⌕
+       </span>
+       <input id="serviceSearch" placeholder="Search services..." type="search"/>
+      </div>
+      <div class="tablewrap">
+       <table id="serviceTable">
+        <thead>
+         <tr>
+          <th>
+           Service
+          </th>
+          <th>
+           Endpoint
+          </th>
+          <th>
+           Status
+          </th>
+          <th>
+           Response
+          </th>
+          <th>
+           Action
+          </th>
+         </tr>
+        </thead>
+        <tbody>
+         {% for s in services %}
+         <tr data-id="{{s.id}}" data-search="{{(s.name+' '+s.service_type+' '+s.host)|lower}}">
+          <td>
+           <b>
+            {{s.name}}
+           </b>
+           <small class="sub">
+            {{s.service_type}}
+           </small>
+          </td>
+          <td>
+           <code>
+            {{s.host}}:{{s.port}}
+           </code>
+          </td>
+          <td class="row-status">
+           <span class="badge {{s.status|lower|replace(' ','-')}}">
+            {{s.status}}
+           </span>
+          </td>
+          <td class="row-response">
+           {% if s.response_ms is not none %}{{s.response_ms}} ms{% else %}—{% endif %}
+          </td>
+          <td>
+           <form action="/services/delete/{{s.id}}" method="post" onsubmit="return confirm('Delete this service?')">
+            <a class="secondary smallbtn" href="/services/edit/{{s.id}}">
+             Edit
+            </a>
+            <button class="delete" type="submit">
+             Delete
+            </button>
+           </form>
+          </td>
+         </tr>
+         {% else %}
+         <tr>
+          <td colspan="5">
+           No services yet.
+          </td>
+         </tr>
+         {% endfor %}
+        </tbody>
+       </table>
+      </div>
+      <div class="addbox">
+       <h3>
+        Add a service
+       </h3>
+       <form action="/services/add" class="formgrid" method="post">
+        <label>
+         Service name
+         <input name="name" placeholder="Local API" required=""/>
+        </label>
+        <label>
+         Type
+         <select name="service_type">
+          <option>
+           Application
+          </option>
+          <option>
+           Server
+          </option>
+          <option>
+           Database
+          </option>
+          <option>
+           Network
+          </option>
+          <option>
+           Other
+          </option>
+         </select>
+        </label>
+        <label>
+         Host / IP
+         <input name="host" placeholder="127.0.0.1" required=""/>
+        </label>
+        <label>
+         Port
+         <input max="65535" min="1" name="port" placeholder="5000" required="" type="number"/>
+        </label>
+        <label class="wide">
+         Depends on (optional)
+         <input name="depends_on" placeholder="Database"/>
+        </label>
+        <button class="primary" type="submit">
+         ＋ Add Service
+        </button>
+       </form>
+      </div>
+     </section>
+     <div class="rightcol">
+      <section class="panel" id="monitoring">
+       <div class="panelhead">
+        <div>
+         <h2>
+          Port Monitor
+         </h2>
+         <p class="muted">
+          TCP reachability checks
+         </p>
+        </div>
+        <span class="ico blue">
+         ⌁
+        </span>
+       </div>
+       <div class="note">
+        <b>
+         How it works
+        </b>
+        <p>
+         Click “Check All Services” to test each configured host and port. Results are saved in History.
+        </p>
+        <small>
+         A successful TCP connection does not guarantee the full application is healthy.
+        </small>
+       </div>
+       <div class="lastcheck">
+        <span>
+         Last check
+        </span>
+        <b id="lastCheck">
+         Not run yet
+        </b>
+       </div>
+      </section>
+      <section class="panel" id="alerts">
+       <div class="panelhead">
+        <div>
+         <h2>
+          Recent Alerts
+         </h2>
+         <p class="muted">
+          Latest failed connection checks.
+         </p>
+        </div>
+        <span class="ico red">
+         !
+        </span>
+       </div>
+       <div id="alertList">
+        {% for a in alerts %}
+        <div class="alert">
+         <i>
+         </i>
+         <div>
+          <b>
+           {{a.name}} unreachable
+          </b>
+          <p>
+           {{a.details}}
+          </p>
+          <small>
+           {{a.checked_at}}
+          </small>
+         </div>
+        </div>
+        {% else %}
+        <p class="empty">
+         No failed checks recorded yet. Run a check to see results here.
+        </p>
+        {% endfor %}
+       </div>
+      </section>
+      <section class="panel">
+       <div class="panelhead">
+        <div>
+         <h2>
+          Suggested Troubleshooting
+         </h2>
+         <p class="muted">
+          General guidance
+         </p>
+        </div>
+        <span class="ico purple">
+         ✦
+        </span>
+       </div>
+       <ul class="tips">
+        <li>
+         <b>
+          Connection refused
+         </b>
+         <span>
+          Confirm the service is running and listening on the configured port.
+         </span>
+        </li>
+        <li>
+         <b>
+          Timeout / no route
+         </b>
+         <span>
+          Check the host address, network, firewall, and port configuration.
+         </span>
+        </li>
+        <li>
+         <b>
+          Database unavailable
+         </b>
+         <span>
+          Verify database service status and connection settings.
+         </span>
+        </li>
+       </ul>
+       <p class="disclaimer">
+        Suggestions are informational. This demo does not automatically restart services.
+       </p>
+      </section>
+     </div>
+    </section>
+    <footer>
+     IT Dependency Mapper · Academic project demo · Checks run only when requested ·
+     <a href="/history">
+      View full history
+     </a>
+    </footer>
+   </main>
+  </div>
+ </body>
+</html>
